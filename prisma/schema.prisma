@@ -13,3 +13,30 @@ datasource db {
   provider = "postgresql"
   url      = env("DATABASE_URL")
 }
+
+
+model User{
+  user_id String @id @default(uuid()) @map("id")
+  username String @db.VarChar(20)
+  password String 
+  books Book[]
+  reviews Review[]
+}
+model Book{
+  book_id String @id @default(uuid()) @map("id")
+  title String
+  author String
+  genre String
+  users User[]
+  reviews Review[]
+}
+model Review{
+  review_id String @id @default(uuid()) @map("id")
+  book_id String
+  book Book @relation(fields: [book_id],references: [book_id])
+  user_id String
+  user User @relation(fields: [user_id],references: [user_id])
+  rating Int
+  description String @db.VarChar(200)
+  @@unique([user_id,book_id])
+}
