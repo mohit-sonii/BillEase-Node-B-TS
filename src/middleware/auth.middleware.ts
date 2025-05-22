@@ -1,7 +1,7 @@
 import { NextFunction, Request, Response } from "express";
 import { validateToken } from "../util/tokenCookie";
 
-export const middleware = async (
+export const authMiddleware = async (
    req: Request,
    res: Response,
    next: NextFunction

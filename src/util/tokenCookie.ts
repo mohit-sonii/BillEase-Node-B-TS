@@ -12,7 +12,7 @@ export const generateToken = (res: Response, id: string, username: string) => {
    addCookie(res, token);
 };
 
-interface JWT {
+export interface JWT {
    id: string;
    username: string;
 }
