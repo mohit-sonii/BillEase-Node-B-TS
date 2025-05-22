@@ -1,5 +1,5 @@
 
-import { Request, Response } from 'express'
+import { Request, response, Response } from 'express'
 import { prisma } from '../client'
 
 /*
@@ -8,6 +8,7 @@ import { prisma } from '../client'
     • store the data which is given like whether it is an updated rating or updated review. do stroe it in object
     • update the result with given review id
 */
+
 export const updateReview = async (req: Request, res: Response) => {
     try {
         const { id } = req.params
@@ -19,6 +20,24 @@ export const updateReview = async (req: Request, res: Response) => {
         if (newRating != undefined) updatedValues.rating = parseInt(newRating)
         if (newDes != undefined) updatedValues.description = newDes
 
+        try {
+            await prisma.review.findFirst({
+                where: {
+                    review_id: id
+                },
+                select: {
+                    rating: true,
+                    review_id:true
+                }
+            })
+        } catch (err:any) {
+            if(err.code==='P2025'){
+                res.status(404).json({ status: 404, message: "Review not found" })
+                return;
+            }
+            console.log(err)
+            return;
+        }
         await prisma.review.update({
             where: {
                 review_id: id
@@ -26,9 +45,13 @@ export const updateReview = async (req: Request, res: Response) => {
             data: updatedValues
         })
 
-        res.status(204).json({ status: 204, message: "Data Updated Successfully" })
+        res.status(200).json({ status: 200, message: "Data Updated Successfully" })
         return;
-    } catch (err) {
+    } catch (err:any) {
+        if(err.code==='P2025'){
+                res.status(404).json({ status: 404, message: "Review not found" })
+                return;
+            }
         res.status(500).json({ status: 500, message: "Internal Server Eroror" })
         console.log(err)
         return;

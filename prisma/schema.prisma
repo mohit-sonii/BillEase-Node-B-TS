@@ -13,7 +13,7 @@ datasource db {
   url      = env("DATABASE_URL")
 }
 
-model User {
+model Users {
   user_id  String   @id @default(uuid()) @map("id")
   username String   @db.VarChar(20)
   password String
@@ -27,7 +27,7 @@ model Book {
   genre     String
   price     Int
   author_id String 
-  author    User     @relation(fields: [author_id], references: [user_id]) // But a book cannot related to many user, hence it is a many to one relation ship with user and book
+  author    Users @relation(fields: [author_id], references: [user_id]) // But a book cannot related to many user, hence it is a many to one relation ship with user and book
   reviews   Review[] // a book can have multiple reviews so one to many realationship
 }
 
@@ -36,7 +36,7 @@ model Review {
   book_id     String //Each review must be for a book itself, and there cna be many of them so it will be many to one relation
   book        Book   @relation(fields: [book_id], references: [book_id])
   user_id     String // a user can review na, hence many user can review but each user each review
-  user        User   @relation(fields: [user_id], references: [user_id])
+  user        Users  @relation(fields: [user_id], references: [user_id])
   rating      Int
   description String @db.VarChar(200)
 

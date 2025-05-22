@@ -14,7 +14,9 @@ import { prisma } from "../client";
     • if match generate a token and store it in cookie
 */
 
-export const login = async (req: Request, res: Response) => {
+// First register your self then login to get a token access , you will not be authenicate unlsess you login after register
+
+export const login = async (req: Request, res: Response):Promise<void> => {
     try {
         const cooki = req.cookies?.auth_for_book;
         if (cooki) {
@@ -25,15 +27,16 @@ export const login = async (req: Request, res: Response) => {
             }
         }
         const { username, password } = req.body;
-        if (username.isEmpty() || password.isEmpty()) {
+        if (username.length == 0 || password.length == 0) {
             res.status(400).json({
                 status: 400,
                 message: "Fields cannot be empty",
             });
+            return
         }
-        const user = await prisma.user.findFirst({
+        const user = await prisma.users.findFirst({
             where: {
-                username,
+                username: username,
             },
             select: {
                 user_id: true,
@@ -47,12 +50,14 @@ export const login = async (req: Request, res: Response) => {
         }
         if (await bcrypt.compare(password, user.password)) {
             generateToken(res, user.user_id, user.username);
-        } else {
-            res.status(400).json({
-                status: 400,
-                message: "Either user name or password is incorrect",
-            });
+            res.status(200).json({status:200,message:"User Logged in"})
+            return
         }
+        res.status(400).json({
+            status: 400,
+            message: "Either user name or password is incorrect",
+        });
+
         return;
     } catch (error: any) {
         res.status(500).json({ status: 500, message: "Internal Server Error" });
@@ -68,10 +73,10 @@ export const login = async (req: Request, res: Response) => {
     • store the user and generate a token adn store it on cookie
 */
 
-export const signup = async (req: Request, res: Response) => {
+export const signup = async (req: Request, res: Response):Promise<void> => {
     try {
         const { username, password } = req.body;
-        const user = await prisma.user.findFirst({
+        const user = await prisma.users.findFirst({
             where: {
                 username,
             },
@@ -85,7 +90,7 @@ export const signup = async (req: Request, res: Response) => {
         }
         const hashPassword = await bcrypt.hash(password, 10);
         try {
-            await prisma.user.create({
+            await prisma.users.create({
                 data: {
                     username,
                     password: hashPassword,

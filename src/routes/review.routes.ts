@@ -5,6 +5,7 @@ import { deleteReview, updateReview } from '../controllers/review.controller';
 
 
 const router = Router()
+
 router.route("/:id").put(authMiddleware,updateReview)
 router.route("/:id").delete(authMiddleware,deleteReview)
 

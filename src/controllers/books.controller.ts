@@ -17,7 +17,14 @@ import { JWT } from "../util/tokenCookie";
 
 export const addBook = async (req: Request, res: Response): Promise<void> => {
     try {
-        const { title, genre, price } = req.body;
+        const { title, genre } = req.body;
+        let {price} = req.body;
+        price = parseInt(price)
+        const cookie = req.cookies?.auth_for_book
+        if (!cookie) {
+            res.status(404).json({ status: 404, message: "Unauthorized" })
+            return
+        }
 
         const findSameTitleBook = await prisma.book.findFirst({
             where: {
@@ -30,11 +37,7 @@ export const addBook = async (req: Request, res: Response): Promise<void> => {
         })
         if (findSameTitleBook != null) {
             res.status(409).json({ status: 409, message: "Book with this title aleady exists" })
-        }
-        const cookie = req.cookies?.auth_for_book
-        if (!cookie) {
-            res.status(404).json({ status: 404, message: "Unauthorized" })
-            return
+            return;
         }
         const decoded = jwt.decode(cookie) as JWT
         try {
@@ -42,22 +45,23 @@ export const addBook = async (req: Request, res: Response): Promise<void> => {
                 data: {
                     title,
                     genre,
-                    price,
                     // this is coz we need to make a relationship and hence we need to connect them with reliable tables. here theauthor field is an entity that is connected with user_id as the author and user are same, because only user can add the book
                     author: {
                         connect: {
                             user_id: decoded.id
                         }
-                    }
+                    },
+                    price,
                 }
             })
-            res.status(201).json({ status: 201, message: "Book Saved Successfully" })
-            return
+
         } catch (err) {
             res.status(500).json({ status: 500, message: "Something went wrong " })
             console.log(err)
             return
         }
+        res.status(201).json({ status: 201, message: "Book Saved Successfully" })
+        return
 
     } catch (err) {
         res.status(500).json({ status: 500, message: "Internal Server Error" })
@@ -98,6 +102,7 @@ export const getBooks = async (req: Request, res: Response) => {
                 ]
             },
             select: {
+                book_id:true,
                 title: true,
                 genre: true,
                 author: {
@@ -145,7 +150,7 @@ interface bookType {
 export const getBookById = async (req: Request, res: Response) => {
     try {
         const { id } = req.params
-        const book: bookType = await prisma.book.findUnique({
+        const book: any = await prisma.book.findUnique({
             where: {
                 book_id: id
             },
@@ -160,7 +165,7 @@ export const getBookById = async (req: Request, res: Response) => {
                 genre: true,
                 reviews: {
                     select: {
-                        review_id:true,
+                        review_id: true,
                         rating: true,
                         description: true
                     },
@@ -172,7 +177,7 @@ export const getBookById = async (req: Request, res: Response) => {
             res.status(404).json({ status: 404, message: "Book not found" })
         }
         const total_reviews = book.reviews.length;
-        const sumTheReviews = book.reviews.reduce((acc, item) => { return acc + item.rating }, 0)
+        const sumTheReviews = book.reviews.reduce((acc: any, item: any) => { return acc + item.rating }, 0)
         const average = (sumTheReviews / total_reviews).toFixed(2)
         res.status(200).json({
             status: 200,
@@ -204,7 +209,7 @@ export const getReviews = async (req: Request, res: Response) => {
                 book_id: id
             },
             select: {
-                review_id:true,
+                review_id: true,
                 rating: true,
                 description: true
             },
@@ -259,14 +264,14 @@ export const submitReview = async (req: Request, res: Response) => {
             })
             res.status(200).json({ status: 200, message: "Thanks for your review" })
             return
-        } catch (err:any) {
+        } catch (err: any) {
 
             // in Prisma there is an error code when we try to add a duplicate record, it throws an error beaucse of the unqiue like that was mentioned in the schema and hence this is a conflict meaning a user already reviewed once hence it will nto granted this time.
-            if(err.code=='P2002'){
+            if (err.code == 'P2002') {
 
                 res.status(409).json({ status: 409, message: "User already reviewe dthe Book" })
-            }else{
-                res.status(500).json({status:500,message:"Error while submitting your review"})
+            } else {
+                res.status(500).json({ status: 500, message: "Error while submitting your review" })
             }
             console.log(err)
             return

@@ -23,8 +23,10 @@ export const findBook = async (req: Request, res: Response) => {
                     } : {},
                     reqAuthor ? {
                         author: {
-                            contains: reqAuthor as string,
-                            mode: 'insensitive'
+                            username:{
+                                contains: reqAuthor as string,
+                                mode: 'insensitive'
+                            }
                         }
                     } : {}
                 ]
