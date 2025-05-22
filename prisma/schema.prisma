@@ -17,8 +17,8 @@ model User {
   user_id  String   @id @default(uuid()) @map("id")
   username String   @db.VarChar(20)
   password String
-  books    Book[]
-  reviews  Review[]
+  books    Book[] // A user can have multiple books 
+  reviews  Review[] // USer can have multiple reviews
 }
 
 model Book {
@@ -26,19 +26,19 @@ model Book {
   title     String   @unique
   genre     String
   price     Int
-  author_id String
-  author    User     @relation(fields: [author_id], references: [user_id])
-  reviews   Review[]
+  author_id String 
+  author    User     @relation(fields: [author_id], references: [user_id]) // But a book cannot related to many user, hence it is a many to one relation ship with user and book
+  reviews   Review[] // a book can have multiple reviews so one to many realationship
 }
 
 model Review {
   review_id   String @id @default(uuid()) @map("id")
-  book_id     String
+  book_id     String //Each review must be for a book itself, and there cna be many of them so it will be many to one relation
   book        Book   @relation(fields: [book_id], references: [book_id])
-  user_id     String
+  user_id     String // a user can review na, hence many user can review but each user each review
   user        User   @relation(fields: [user_id], references: [user_id])
   rating      Int
   description String @db.VarChar(200)
 
-  @@unique([user_id, book_id])
+  @@unique([user_id, book_id]) // this is to make sure that the gorup of bookId and userId never occuragain hence this will help use to make oneuser one review only.
 }

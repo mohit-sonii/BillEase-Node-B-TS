@@ -3,6 +3,17 @@ import { generateToken, validateToken } from "../util/tokenCookie";
 import bcrypt from "bcrypt";
 import { prisma } from "../client";
 
+// login controller that is responsible to handle the login logic
+/*
+    • Check whether the browser has token or not 
+    • If yes, then validate it and if it is valid then return the redirection code
+    • Take username and password and from body
+    • find whether we have that user or not
+    • if not then return no user found
+    • if found compare the password
+    • if match generate a token and store it in cookie
+*/
+
 export const login = async (req: Request, res: Response) => {
     try {
         const cooki = req.cookies?.auth_for_book;
@@ -49,6 +60,13 @@ export const login = async (req: Request, res: Response) => {
         return;
     }
 };
+
+/*
+    • Take the username and password from body
+    • find the user and if a user found then return hence the user will same username already existis
+    • hash teh password
+    • store the user and generate a token adn store it on cookie
+*/
 
 export const signup = async (req: Request, res: Response) => {
     try {

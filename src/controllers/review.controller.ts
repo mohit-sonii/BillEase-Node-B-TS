@@ -2,6 +2,12 @@
 import { Request, Response } from 'express'
 import { prisma } from '../client'
 
+/*
+    • Take Id from params
+    • Take the data
+    • store the data which is given like whether it is an updated rating or updated review. do stroe it in object
+    • update the result with given review id
+*/
 export const updateReview = async (req: Request, res: Response) => {
     try {
         const { id } = req.params
@@ -28,6 +34,11 @@ export const updateReview = async (req: Request, res: Response) => {
         return;
     }
 }
+
+/*
+    • Take Id from params
+    • Delete the record with given id
+*/
 export const deleteReview = async (req: Request, res: Response) => {
     try {
         const { id } = req.params
@@ -41,6 +52,8 @@ export const deleteReview = async (req: Request, res: Response) => {
             return
 
         } catch (err: any) {
+
+            // in Prisma when we try to delete a record which does not exists, priisma gives use an error with code P2025 and this can be catch and we can send our repsosne without clashing out code
             if (err.code === 'P2025') {
                 res.status(404).json({ status: 404, message: "Not Found" })
             } else {

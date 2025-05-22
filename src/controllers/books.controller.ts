@@ -3,6 +3,18 @@ import { prisma } from "../client";
 import jwt from 'jsonwebtoken'
 import { JWT } from "../util/tokenCookie";
 
+/* 
+    • Checking of cookie is pretty redundant beacuse a user can reach here only and only if he is authenticated else it will not be here, but jsut for safety concern i let it go. 
+
+    • The user id can be added in the Request but it works without error in JavaScript but in TypeScript this often gives type error which i was unable to resolve even after hours of troubleshooting so which is why I am using token and fetch user again and again
+*/
+
+/*
+    • Take required data as input
+    • Check whether we have cookie or not, if not then return unautoeized
+    • Store the book in the database
+*/
+
 export const addBook = async (req: Request, res: Response): Promise<void> => {
     try {
         const { title, genre, price } = req.body;
@@ -31,6 +43,7 @@ export const addBook = async (req: Request, res: Response): Promise<void> => {
                     title,
                     genre,
                     price,
+                    // this is coz we need to make a relationship and hence we need to connect them with reliable tables. here theauthor field is an entity that is connected with user_id as the author and user are same, because only user can add the book
                     author: {
                         connect: {
                             user_id: decoded.id
@@ -53,6 +66,11 @@ export const addBook = async (req: Request, res: Response): Promise<void> => {
     }
 }
 
+/*
+    • Get author name, genre and page number from query parameter
+    • Find the book with any thing that we have either from name or genre, if we have both find from both, anyone do serach from anyone. only then
+*/
+
 export const getBooks = async (req: Request, res: Response) => {
     try {
         const { authorName, genr, page } = req.query
@@ -61,6 +79,7 @@ export const getBooks = async (req: Request, res: Response) => {
         const books = await prisma.book.findMany({
             where: {
                 AND: [
+                    // if the authorName is avaiable so serach for it else do nothing
                     authorName ? {
                         author: {
                             username: {
@@ -69,6 +88,7 @@ export const getBooks = async (req: Request, res: Response) => {
                             }
                         }
                     } : {},
+                    // if the genere is present do search for it else do nothing
                     genr ? {
                         genre: {
                             contains: genr as string,
@@ -102,6 +122,7 @@ export const getBooks = async (req: Request, res: Response) => {
     }
 }
 
+// just type interface for Book Extraction
 interface bookType {
     title: string,
     genre: string,
@@ -114,6 +135,13 @@ interface bookType {
         description: string
     }[]
 }
+
+
+/*
+    • get Id from params
+    • find the book from that id and if found return it else leave it
+*/
+
 export const getBookById = async (req: Request, res: Response) => {
     try {
         const { id } = req.params
@@ -158,6 +186,12 @@ export const getBookById = async (req: Request, res: Response) => {
     }
 }
 
+
+/*
+    • Get page number from query for pagination
+    • Find the review whose id match witht he params id which is book id
+    • return the result and do add pagincation logic
+*/
 export const getReviews = async (req: Request, res: Response) => {
     try {
         const { page } = req.query
@@ -192,8 +226,11 @@ export const getReviews = async (req: Request, res: Response) => {
     }
 }
 
-
-// The user id can be added in the Request but it works without error in JavaScript but in TypeScript this often gives type error which i was unable to resolve even after hours of troubleshooting so which is why I am using token and fetch user again and again
+/*
+    • To Submit a review do accept the book id from params and new data from body
+    • do some auth work
+    • create connection iwth that book and user id with that new review
+*/
 export const submitReview = async (req: Request, res: Response) => {
     try {
         const { id } = req.params
@@ -223,6 +260,8 @@ export const submitReview = async (req: Request, res: Response) => {
             res.status(200).json({ status: 200, message: "Thanks for your review" })
             return
         } catch (err:any) {
+
+            // in Prisma there is an error code when we try to add a duplicate record, it throws an error beaucse of the unqiue like that was mentioned in the schema and hence this is a conflict meaning a user already reviewed once hence it will nto granted this time.
             if(err.code=='P2002'){
 
                 res.status(409).json({ status: 409, message: "User already reviewe dthe Book" })

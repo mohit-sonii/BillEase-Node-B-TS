@@ -4,6 +4,7 @@ import { prisma } from "../client";
 
 const secret = process.env.SECRET_KEY || "JavaPythonRustRubyFlaskCos";
 
+// generate a token
 export const generateToken = (res: Response, id: string, username: string) => {
    const token = jwt.sign({ id, username }, process.env.SECRET_KEY || secret, {
       algorithm: "ES256",
@@ -17,6 +18,7 @@ export interface JWT {
    username: string;
 }
 
+// validate a token
 export const validateToken = async (token: string) => {
    const decode = jwt.verify(token, process.env.SECRET_KEY || secret) as JWT;
    const user = await prisma.user.findFirst({
@@ -32,6 +34,7 @@ export const validateToken = async (token: string) => {
    return true;
 };
 
+// add a cookie
 export const addCookie = (res: Response, token: string) => {
    res.cookie("auth_for_book", token, {
       httpOnly: true,
