@@ -2,7 +2,6 @@ import { Response, Request } from "express"
 import { prisma } from "../client";
 import jwt from 'jsonwebtoken'
 import { JWT } from "../util/tokenCookie";
-import { error } from "console";
 
 export const addBook = async (req: Request, res: Response): Promise<void> => {
     try {
@@ -133,6 +132,7 @@ export const getBookById = async (req: Request, res: Response) => {
                 genre: true,
                 reviews: {
                     select: {
+                        review_id:true,
                         rating: true,
                         description: true
                     },
@@ -170,6 +170,7 @@ export const getReviews = async (req: Request, res: Response) => {
                 book_id: id
             },
             select: {
+                review_id:true,
                 rating: true,
                 description: true
             },
